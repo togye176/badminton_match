@@ -19,14 +19,14 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
-.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start}
 @media (max-width:860px){.wrap{grid-template-columns:1fr}}
 header.top{max-width:1180px;margin:0 auto 20px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 h1{font-family:var(--f-display);font-weight:400;font-size:34px;margin:0;letter-spacing:.5px;text-wrap:balance}
 .sub{color:var(--muted);font-size:14px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:18px}
-@media (min-width:861px){.panel{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
-.label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-bottom:6px;display:block}
+.label{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.label .spacer{flex:1}
 .row{display:flex;gap:8px}
 input[type=text],input[type=number]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;min-width:0}
 input:focus-visible,button:focus-visible{outline:2px solid var(--shuttle);outline-offset:2px}
@@ -34,12 +34,20 @@ button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line
 button:hover{border-color:var(--court)}
 button.primary{background:var(--court);color:var(--court-ink);border-color:var(--court);font-weight:600;padding:11px 14px}
 button.primary:hover{filter:brightness(1.08)}
-button.link{border:none;background:none;color:var(--muted);padding:2px 4px;font-size:13px;text-decoration:underline}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.chip{display:inline-flex;align-items:center;gap:4px;background:var(--soft);border-radius:999px;padding:3px 4px 3px 11px;font-size:14px}
-.chip button{border:none;background:none;padding:0 6px;color:var(--muted);font-size:16px;line-height:1}
-.chip button:hover{color:var(--danger)}
-.count{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-left:6px;letter-spacing:0}
+button.link{border:none;background:none;color:var(--muted);padding:2px 4px;font-size:13px;text-decoration:underline;font-weight:400;letter-spacing:0}
+button.link.on{color:var(--danger)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--court);color:var(--court-ink);border-radius:999px;padding:3px 4px 3px 11px;font-size:14px}
+.chip button{border:none;background:none;padding:0 6px;color:inherit;opacity:.75;font-size:16px;line-height:1}
+.chip button:hover{opacity:1}
+.none{font-size:13px;color:var(--muted)}
+.members{display:flex;flex-wrap:wrap;gap:6px;max-height:260px;overflow-y:auto;padding:2px}
+.mchip{border-radius:999px;padding:4px 12px;font-size:14px;background:var(--surface);border:1px solid var(--line)}
+.mchip[aria-pressed=true]{background:var(--soft);border-color:var(--court);color:var(--court);font-weight:600}
+.mchip[aria-pressed=true]::before{content:"✓ "}
+.members.editing .mchip{border-style:dashed;color:var(--danger);border-color:var(--danger);background:var(--surface);font-weight:400}
+.members.editing .mchip::before{content:"× "}
+.count{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:0}
 .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{flex:1;border:none;border-radius:0}
 .seg button[aria-pressed=true]{background:var(--court);color:var(--court-ink)}
@@ -73,31 +81,35 @@ th{font-size:12px;color:var(--muted);font-weight:600}
 td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 tr.gone td{color:var(--muted);text-decoration:line-through}
 .bar{display:inline-block;height:8px;background:var(--court);border-radius:2px;vertical-align:middle;margin-left:8px}
-.example{display:inline-block;font-size:11px;background:var(--shuttle);color:#2a2105;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <header class="top">
   <h1>배드민턴 대진표</h1>
-  <span class="sub">참석자를 넣으면 경기 수가 고르게 돌아가도록 짝과 상대를 섞어 줍니다.</span>
+  <span class="sub">회원 목록에서 오늘 참석자를 눌러 고르면, 경기 수가 고르게 돌아가도록 짝과 상대를 섞어 줍니다.</span>
 </header>
 
 <div class="wrap">
   <aside class="panel">
     <div>
-      <label class="label" for="nameIn">참석자 <span class="count" id="pcount"></span><span class="example" id="exTag" hidden>예시</span></label>
-      <div class="row">
-        <input type="text" id="nameIn" placeholder="이름 입력 (쉼표로 여러 명)">
-        <button id="addBtn">추가</button>
-      </div>
+      <div class="label">오늘 참석자 <span class="count" id="pcount"></span><span class="spacer"></span><button class="link" id="clearPlayers">모두 빼기</button></div>
       <div class="chips" id="chips"></div>
-      <div class="row" style="margin-top:8px;gap:4px">
-        <button class="link" id="clearPlayers">참석자 모두 지우기</button>
-      </div>
     </div>
 
     <div>
-      <span class="label">경기 방식</span>
+      <div class="label">회원 목록 <span class="count" id="mcount"></span><span class="spacer"></span>
+        <button class="link" id="selAll">전체 선택</button>
+        <button class="link" id="editBtn">회원 삭제</button></div>
+      <div class="row" style="margin-bottom:8px">
+        <input type="text" id="nameIn" placeholder="이름 검색 또는 새 회원 입력" autocomplete="off">
+        <button id="addBtn">추가</button>
+      </div>
+      <div class="members" id="members"></div>
+      <p class="hint" id="memberHint" style="margin-top:6px">이름을 누르면 참석자로 들어가고, 다시 누르면 빠집니다. 목록에 없는 사람은 위에 입력하고 추가하세요.</p>
+    </div>
+
+    <div>
+      <div class="label">경기 방식</div>
       <div class="seg" role="group" aria-label="경기 방식">
         <button id="mDouble" aria-pressed="true">복식</button>
         <button id="mSingle" aria-pressed="false">단식</button>
@@ -127,22 +139,49 @@ tr.gone td{color:var(--muted);text-decoration:line-through}
 </div>
 
 <script>
+/* 기본 회원 목록: 처음 여는 사람에게 보이는 명단 */
+const DEFAULT_MEMBERS=['김민준','이서연','박지호','최수아','정도윤','강하은','윤시우','장예린','임준서','한지민','오세훈','서유나','신동현','권나래'];
+
 const KEY='badminton-bracket-v1';
-const EXAMPLE=['김민준','이서연','박지호','최수아','정도윤','강하은','윤시우','장예린','임준서','한지민'];
-let S={players:EXAMPLE.slice(),mode:'doubles',courts:2,rounds:6,schedule:[],example:true};
-try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&Array.isArray(s.players))S=Object.assign(S,s);}catch(e){}
+let S={members:null,removedDefaults:[],players:[],mode:'doubles',courts:2,rounds:6,schedule:[]};
+try{
+  const s=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(s){
+    if(s.example){s.players=[];s.schedule=[];}           // 이전 버전의 예시 명단은 버림
+    delete s.example;
+    S=Object.assign(S,s);
+  }
+}catch(e){}
+const uniq=a=>[...new Set(a)];
+if(!Array.isArray(S.members))S.members=uniq([...DEFAULT_MEMBERS,...S.players]);
+// 기본 명단에 새로 들어간 이름도 반영 (직접 삭제한 이름은 제외)
+S.members=uniq([...S.members,...DEFAULT_MEMBERS.filter(n=>!S.removedDefaults.includes(n))]);
+S.players=S.players.filter(p=>S.members.includes(p));
+let editing=false;
+
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const $=id=>document.getElementById(id);
+const sortKo=a=>a.slice().sort((x,y)=>x.localeCompare(y,'ko'));
 
 function addNames(txt){
   const names=txt.split(/[,\n，、]+/).map(s=>s.trim()).filter(Boolean);
-  if(S.example){S.players=[];S.example=false;}
-  let dup=[];
-  names.forEach(n=>{if(S.players.includes(n))dup.push(n);else S.players.push(n);});
-  showMsg(dup.length?`이미 있는 이름: ${dup.join(', ')}`:'');
+  names.forEach(n=>{
+    if(!S.members.includes(n))S.members.push(n);
+    if(!S.players.includes(n))S.players.push(n);
+  });
+  showMsg('');save();render();
+}
+function toggleMember(n){
+  if(S.players.includes(n))S.players=S.players.filter(p=>p!==n);else S.players.push(n);
   save();render();
 }
-function removeName(n){S.example=false;S.players=S.players.filter(p=>p!==n);save();render();}
+function removePlayer(n){S.players=S.players.filter(p=>p!==n);save();render();}
+function deleteMember(n){
+  S.members=S.members.filter(p=>p!==n);
+  S.players=S.players.filter(p=>p!==n);
+  if(DEFAULT_MEMBERS.includes(n)&&!S.removedDefaults.includes(n))S.removedDefaults.push(n);
+  save();render();
+}
 function showMsg(t){$('msg').textContent=t;$('msg').hidden=!t;}
 
 /* ---------- 대진 생성 ---------- */
@@ -161,7 +200,7 @@ function buildHistory(rounds){
   return H;
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function bestDoubles(g,H){ // g: 4 players → best split
+function bestDoubles(g,H){
   const opts=[[[g[0],g[1]],[g[2],g[3]]],[[g[0],g[2]],[g[1],g[3]]],[[g[0],g[3]],[g[1],g[2]]]];
   let best=null,bc=1e9;
   opts.forEach(([a,b])=>{
@@ -194,13 +233,11 @@ function makeRound(players,H,mode,courts){
 }
 function generate(){
   showMsg('');
-  S.mode=$('mDouble').getAttribute('aria-pressed')==='true'?'doubles':'singles';
   S.courts=Math.max(1,parseInt($('courtsIn').value)||1);
   S.rounds=Math.max(1,parseInt($('roundsIn').value)||1);
   const per=S.mode==='doubles'?4:2;
-  if(S.players.length<per){showMsg(`${S.mode==='doubles'?'복식':'단식'}은 최소 ${per}명이 필요해요. 참석자를 더 추가해 주세요.`);return;}
-  const kept=S.schedule.filter(r=>r.done);
-  const out=kept.slice();
+  if(S.players.length<per){showMsg(`${S.mode==='doubles'?'복식':'단식'}은 최소 ${per}명이 필요해요. 회원 목록에서 참석자를 더 골라 주세요.`);return;}
+  const out=S.schedule.filter(r=>r.done);
   for(let i=0;i<S.rounds;i++){const H=buildHistory(out);out.push(makeRound(S.players,H,S.mode,S.courts));}
   S.schedule=out;save();render();
   const possible=Math.floor(S.players.length/per);
@@ -209,16 +246,30 @@ function generate(){
 
 /* ---------- 화면 ---------- */
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function renderMembers(){
+  const q=$('nameIn').value.trim();
+  const list=sortKo(S.members).filter(n=>!q||n.includes(q));
+  const M=$('members');
+  M.classList.toggle('editing',editing);
+  M.innerHTML=list.length?list.map(n=>`<button class="mchip" aria-pressed="${S.players.includes(n)}" data-m="${esc(n)}">${esc(n)}</button>`).join('')
+    :`<span class="none">${q?`'${esc(q)}' 회원이 없어요. <b>추가</b>를 누르면 새 회원으로 등록하고 참석자에 넣습니다.`:'등록된 회원이 없어요. 위에 이름을 입력해 추가하세요.'}</span>`;
+  $('mcount').textContent=S.members.length+'명';
+  $('editBtn').textContent=editing?'삭제 끝내기':'회원 삭제';
+  $('editBtn').classList.toggle('on',editing);
+  $('memberHint').textContent=editing?'누르는 회원은 목록에서 지워집니다. 다 지웠으면 「삭제 끝내기」를 누르세요.'
+    :'이름을 누르면 참석자로 들어가고, 다시 누르면 빠집니다. 목록에 없는 사람은 위에 입력하고 추가하세요.';
+}
 function render(){
-  $('exTag').hidden=!S.example;
   $('pcount').textContent=S.players.length+'명';
-  $('chips').innerHTML=S.players.map(p=>`<span class="chip">${esc(p)}<button aria-label="${esc(p)} 빼기" data-rm="${esc(p)}">×</button></span>`).join('');
+  $('chips').innerHTML=S.players.length?S.players.map(p=>`<span class="chip">${esc(p)}<button aria-label="${esc(p)} 빼기" data-rm="${esc(p)}">×</button></span>`).join('')
+    :'<span class="none">아래 회원 목록에서 오늘 온 사람을 눌러 주세요.</span>';
+  renderMembers();
   $('mDouble').setAttribute('aria-pressed',S.mode==='doubles');
   $('mSingle').setAttribute('aria-pressed',S.mode!=='doubles');
   $('courtsIn').value=S.courts;$('roundsIn').value=S.rounds;
   const R=$('rounds');
   if(!S.schedule.length){
-    R.innerHTML=`<div class="empty">참석자와 코트 수를 정한 뒤 <b>대진표 만들기</b>를 누르세요.<br>${S.example?'왼쪽 이름은 예시예요. 실제 참석자를 추가하면 예시는 사라집니다.':''}</div>`;
+    R.innerHTML=`<div class="empty">회원 목록에서 참석자를 고르고 코트 수를 정한 뒤 <b>대진표 만들기</b>를 누르세요.</div>`;
     $('statsBox').hidden=true;return;
   }
   R.innerHTML=S.schedule.map((r,i)=>`
@@ -239,10 +290,18 @@ function render(){
   $('statsBox').hidden=false;
 }
 
-$('addBtn').onclick=()=>{const v=$('nameIn').value;if(v.trim()){addNames(v);$('nameIn').value='';$('nameIn').focus();}};
+$('addBtn').onclick=()=>{const v=$('nameIn').value;if(v.trim()){addNames(v);$('nameIn').value='';renderMembers();$('nameIn').focus();}};
 $('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();$('addBtn').click();}});
-$('chips').onclick=e=>{const n=e.target.dataset.rm;if(n!==undefined)removeName(n);};
-$('clearPlayers').onclick=()=>{S.players=[];S.example=false;save();render();};
+$('nameIn').addEventListener('input',renderMembers);
+$('chips').onclick=e=>{const n=e.target.dataset.rm;if(n!==undefined)removePlayer(n);};
+$('members').onclick=e=>{const n=e.target.dataset.m;if(n===undefined)return;editing?deleteMember(n):toggleMember(n);};
+$('editBtn').onclick=()=>{editing=!editing;renderMembers();};
+$('selAll').onclick=()=>{
+  const q=$('nameIn').value.trim();
+  S.members.filter(n=>!q||n.includes(q)).forEach(n=>{if(!S.players.includes(n))S.players.push(n);});
+  save();render();
+};
+$('clearPlayers').onclick=()=>{S.players=[];save();render();};
 $('mDouble').onclick=()=>{S.mode='doubles';save();render();};
 $('mSingle').onclick=()=>{S.mode='singles';save();render();};
 $('courtsIn').onchange=()=>{S.courts=Math.max(1,parseInt($('courtsIn').value)||1);save();};
@@ -254,6 +313,5 @@ $('resetBtn').onclick=()=>{
   if(!resetArm){resetArm=true;$('resetBtn').textContent='한 번 더 누르면 초기화됩니다';setTimeout(()=>{resetArm=false;$('resetBtn').textContent='대진표 전체 초기화';},3000);return;}
   resetArm=false;S.schedule=[];$('resetBtn').textContent='대진표 전체 초기화';save();render();
 };
-if(!S.schedule.length&&S.example){generate();}
 render();
 </script>
